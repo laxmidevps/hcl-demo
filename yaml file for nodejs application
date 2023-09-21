@@ -1,0 +1,65 @@
+trigger:
+- master  # Define the branch that triggers the pipeline
+
+pr:
+- '*'  # Automatically build pull requests
+
+pool:
+  vmImage: 'ubuntu-latest'  # Use the latest Ubuntu image
+
+variables:
+  nodeVersion: '14'  # Define the Node.js version you want to use
+
+stages:
+- stage: Build
+  displayName: 'Build Stage'
+  jobs:
+  - job: BuildJob
+    displayName: 'Build Job'
+    steps:
+    - task: UseNode@1
+      inputs:
+        versionSpec: '$(nodeVersion)'
+        checkLatest: true
+      displayName: 'Use Node.js'
+
+    - script: npm install
+      displayName: 'Install Dependencies'
+
+    - script: npm run build  # Adjust this command according to your build process
+      displayName: 'Build Application'
+
+    - publish: $(System.DefaultWorkingDirectory)
+      artifact: drop
+      displayName: 'Publish Artifact'
+
+- stage: Test
+  displayName: 'Test Stage'
+  jobs:
+  - job: TestJob
+    displayName: 'Test Job'
+    steps:
+    - task: UseNode@1
+      inputs:
+        versionSpec: '$(nodeVersion)'
+        checkLatest: true
+      displayName: 'Use Node.js'
+
+    - script: npm test  # Adjust this command according to your testing process
+      displayName: 'Run Tests'
+
+- stage: Deploy
+  displayName: 'Deploy Stage'
+  jobs:
+  - job: DeployJob
+    displayName: 'Deploy Job'
+    steps:
+    - task: UseNode@1
+      inputs:
+        versionSpec: '$(nodeVersion)'
+        checkLatest: true
+      displayName: 'Use Node.js'
+
+    # Add deployment steps here (e.g., Azure Web App deployment)
+
+# Add more stages for additional deployment environments (e.g., staging, production)
